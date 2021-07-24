@@ -1,90 +1,70 @@
 package com.lwl.ms.teamservice.service;
-
+import com.lwl.ms.teamservice.domain.Team;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.lwl.ms.teamservice.exception.TeamNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
-
-import com.lwl.ms.teamservice.domain.Team;
+import org.springframework.util.Assert;
 
 @Service
+@Slf4j
 public class TeamServiceImpl implements TeamService {
 
-	@Autowired
-	private ResourceLoader resourceLoader;
-
+	@Value("${data.file.name}")
+	private String fileName;
 	private List<Team> teamList = new ArrayList<>();
 
 	@PostConstruct
 	public void init() throws IOException {
-
-		Path p = new ClassPathResource("teams.csv").getFile().toPath();
-
-		List<String> str = Files.readAllLines(p);
-		String[] arr;
-
-		for (String s : str) {
-			arr = s.split(",");
-			String city = arr[0];
-			String coach = arr[2];
-			String homeGround = arr[3];
-			String name = arr[4];
-			String label = arr[5];
-
-			Team t = new Team(name, coach, city, homeGround, label);
-			teamList.add(t);
-
+		try{
+			List<String> lines = Files.readAllLines(new ClassPathResource(fileName).getFile().toPath());
+			teamList = lines.stream().map(TeamServiceImpl::lineToTeam).collect(Collectors.toList());
+			log.info("Total {} are teams found",teamList.size());
+		}catch (IOException e){
+			log.error("File {} not found in the classpath");
 		}
+	}
+
+	private static Team lineToTeam(String line) {
+		String[] arr = line.split(",");
+		int count = 0;
+		String city = arr[count++];
+		String coach = arr[count++];
+		String homeGround = arr[count++];
+		String name = arr[count++];
+		String label = arr[count++];
+		return Team.builder().city(city).name(name).homeGround(homeGround).label(label).coach(coach).build();
 	}
 
 	@Override
 	public List<Team> getTeamDetails() {
-
-		List<Team> list = teamList;
-
-		return list;
+		log.info("Requested for team  details and found {} teams",teamList.size());
+		return teamList;
 	}
-
 	@Override
 	public List<String> getTeamLabels() {
-
-		List<String> list = new ArrayList<>();
-
-		for (Team teamlist : teamList) {
-			list.add(teamlist.getLabel());
-		}
-
+		List<String> list = teamList.stream().map(t -> t.getLabel()).collect(Collectors.toList());
+		log.info("Team labels are requested and returned {}",list);
 		return list;
 	}
 
 	@Override
-	public Optional<Team> getTeam(String label) {
-
-		for (Team l : teamList) {
-
-			if (label.equals(l.getLabel())) {
-
-				return Optional.of(l);
-			} else {
-				System.out.println("Optional is empty");
-			}
-
-		}
-
-		return Optional.empty();
+	public Team getTeamByLabel(final String label) {
+		 Assert.hasText(label,"Label can't be empty or null");
+		 log.info("Requested team details of the label {}",label);
+		 Optional<Team> optTeam = teamList.stream().filter(t -> t.getLabel().equalsIgnoreCase(label)).findFirst();
+		 if(!optTeam.isPresent()){
+		 	log.error("Team details are not found for the given label {}:",label);
+		 }
+		 return optTeam.orElseThrow(()->new TeamNotFoundException("Team is not found with given name :"+label));
 	}
 
-	public static void main(String[] args) {
-		TeamService obj = new TeamServiceImpl();
-		obj.getTeamDetails();
-	}
 }

@@ -9,5 +9,5 @@ public interface TeamService {
 
         public List<Team> getTeamDetails();
         public List<String> getTeamLabels();
-        public Optional<Team> getTeam(String label);
+        public Team getTeamByLabel(String label);
 }

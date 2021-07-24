@@ -21,22 +21,18 @@ public class TeamController {
 		this.teamService = teamService;
 	}
 
-	@GetMapping("/teamDetails")
+	@GetMapping("/teamdetails")
 	public List<Team> getTeamDetails() {
-
 		return teamService.getTeamDetails();
-
 	}
 
-	@GetMapping("/label")
+	@GetMapping("/labels")
 	public List<String> getTeamLabels() {
-
 		return teamService.getTeamLabels();
 	}
 
 	@GetMapping("/{label}")
-	public Optional<Team> getTeam(@PathVariable("label")String label) {
-		return teamService.getTeam(label);
-
+	public Team getTeam(@PathVariable("label")String label) {
+		return teamService.getTeamByLabel(label);
 	}
 }
