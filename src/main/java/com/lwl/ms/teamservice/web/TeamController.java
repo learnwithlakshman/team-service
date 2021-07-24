@@ -6,6 +6,7 @@ import com.lwl.ms.teamservice.service.TeamService;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,17 +23,17 @@ public class TeamController {
 	}
 
 	@GetMapping("/teamdetails")
-	public List<Team> getTeamDetails() {
-		return teamService.getTeamDetails();
+	public ResponseEntity<?> getTeamDetails() {
+		return ResponseEntity.ok(teamService.getTeamDetails());
 	}
 
 	@GetMapping("/labels")
-	public List<String> getTeamLabels() {
-		return teamService.getTeamLabels();
+	public ResponseEntity<?> getTeamLabels() {
+		return ResponseEntity.ok(teamService.getTeamLabels());
 	}
 
 	@GetMapping("/{label}")
-	public Team getTeam(@PathVariable("label")String label) {
-		return teamService.getTeamByLabel(label);
+	public ResponseEntity<?> getTeam(@PathVariable("label")String label) {
+		return ResponseEntity.ok(teamService.getTeamByLabel(label));
 	}
 }
